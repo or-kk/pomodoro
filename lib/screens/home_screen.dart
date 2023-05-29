@@ -9,15 +9,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int totalSecond = 1500;
+  static const tikme = 1500;
+  int totalSecond = tikme;
   bool isRunning = false;
-
+  int totalPomodoros = 0;
   late Timer timer;
 
   void onTick(Timer timer) {
-    setState(() {
-      totalSecond -= 1;
-    });
+    if (totalSecond == 0) {
+      setState(() {
+        totalPomodoros = totalPomodoros + 1;
+        isRunning = false;
+        totalSecond = tikme;
+      });
+      timer.cancel();
+    } else {
+      setState(() {
+        totalSecond -= 1;
+      });
+    }
   }
 
   void onStartPressed() {
@@ -38,6 +48,20 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void onResetPressed() {
+    timer.cancel();
+
+    setState(() {
+      isRunning = false;
+      totalSecond = tikme;
+    });
+  }
+
+  String format(int seconds) {
+    var duration = Duration(seconds: seconds);
+    return duration.toString().split(".").first.substring(2, 7);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               alignment: Alignment.bottomCenter,
               child: Text(
-                '$totalSecond',
+                format(totalSecond),
                 style: TextStyle(
                   color: Theme.of(context).cardColor,
                   fontSize: 89,
@@ -60,17 +84,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Flexible(
             flex: 3,
-            child: Center(
-              child: IconButton(
-                iconSize: 120,
-                color: Theme.of(context).cardColor,
-                icon: Icon(
-                  isRunning
-                      ? Icons.pause_circle_outline
-                      : Icons.play_circle_outline,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: IconButton(
+                    iconSize: 120,
+                    color: Theme.of(context).cardColor,
+                    icon: Icon(
+                      isRunning
+                          ? Icons.pause_circle_outline
+                          : Icons.play_circle_outline,
+                    ),
+                    onPressed: isRunning ? onPausePressed : onStartPressed,
+                  ),
                 ),
-                onPressed: isRunning ? onPausePressed : onStartPressed,
-              ),
+                IconButton(
+                  iconSize: 120,
+                  color: Theme.of(context).cardColor,
+                  icon: const Icon(
+                    Icons.reset_tv_outlined,
+                  ),
+                  onPressed: onResetPressed,
+                ),
+              ],
             ),
           ),
           Flexible(
@@ -95,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Text(
-                          '0',
+                          '$totalPomodoros',
                           style: TextStyle(
                             fontSize: 58,
                             color: Theme.of(context).textTheme.headline1!.color,
